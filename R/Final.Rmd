@@ -1,0 +1,33 @@
+---
+title: "CAP5771 Final Project"
+author: "Quentin Goss `quentingoss0323@floridapoly.edu`"
+subtitle: "Exploration of Street Network Node and Edge Features."
+bibliography: "CAP5771-final.bib"
+cls: "IEEEtran.cls"
+output:
+    html_document:
+        df_print: paged
+---
+<hr>
+## Part 1 - Introduction
+
+***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principle component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**
+
+***Index Terms*--transportation systems, street networks, association rule learning, principle component analysis**
+
+The transportation system (TS) is a complex arrangement of roads, highways, bridges, intersections, and infrastructure which traditionally provides the means of moving people and cargo from one place in the system to another in the least amount of time. Every TS is unique, and also imperfect since the layout of a TS is gradually implemented over ten or hundreds of years. During the expansion of a TS, it is unreasonable or impossible to predict the perfect expansion layout for the current moment as well for all potential futures. Often times, a government committee creates TS models to plan for TS expansion in the near future such as the 5 Year Consolidated Plan created by the Polk County Board of County Commissioners each year @PCBOCC2016.
+
+The street network (SN) is the skeleton of a TS, as it consists of the paths that vehicles in a TS travel along to traverse the TS. These SNs may be represented as graphs $G = \{E,V\}$ which are a combination of intersections $V$ and road segments between intersections $E$. Realistic SNs, such those obtained from Open Street Maps (OSM) @OpenStreetMap2019 are very detailed, including data about speed, highway type, merging rules at an intersection,priorities for edges to break same-arrival ties at intersections, etc.
+
+Many TS modeling tools utilize SNs and the OSM SNs such as OSMnx for analysis and model construction @BOEING2017, CrowdSenSim for building crowdsensing models @FIANDRINO2017, and by @VITELLO2018 in their tool for pedestrian mobility modeling.
+
+We will be using a SN retrieved from OSM, of which the drivable roads are filtered and that is converted into SUMO SN format, which is easier to work with.
+
+Edges may contain data such as speed, type, priority, and name, along with graph information such as the vertex id that it begins and ends at. The nodes (vertices) are simpler, they contain spatial information, and a type, which are tie-breaking rules when two vehicles enter the vertex, which decides a vehicle to move first when they arrive at an intersection at the same time. For our proposed approach, we will first pre-process the SN data using Python to format it into CSV (comma separated value) format. Then, we will utilize R to explore the SN data, performing principle component analysis (PCA) to determine which edge properties are most important to defining the edges of a SN, and also association rule learning using the Apriori algorithm to create association rules that can be used to model a similar SN, or to be used to enhance the quality of a dimension reduced SN.
+
+We have selected a $5000m^2$ SN of Orlando to explore.
+
+## Aknowledgements
+The street network data is partially derived from OSM data (c) OSM contributors and available at [https://www.openstreetmap.org/](https://www.openstreetmap.org/)
+
+## References

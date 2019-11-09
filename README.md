@@ -3,7 +3,7 @@
 
 ***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principle component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**
 
-Welcome to my final for CAP5771 Data and Text Mining.
+Welcome to my final project for CAP5771 Data and Text Mining.
 
 #### data
 Node (vertex) and Edge data are stored as `.csv` here. This is preprocessed data.

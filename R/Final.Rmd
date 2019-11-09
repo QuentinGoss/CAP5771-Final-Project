@@ -9,7 +9,7 @@ output:
         df_print: paged
 ---
 <hr>
-## Part 1 - Introduction
+## *Part 1 - Introduction*
 
 ***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principle component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**
 
@@ -25,9 +25,32 @@ We will be using a SN retrieved from OSM, of which the drivable roads are filter
 
 Edges may contain data such as speed, type, priority, and name, along with graph information such as the vertex id that it begins and ends at. The nodes (vertices) are simpler, they contain spatial information, and a type, which are tie-breaking rules when two vehicles enter the vertex, which decides a vehicle to move first when they arrive at an intersection at the same time. For our proposed approach, we will first pre-process the SN data using Python to format it into CSV (comma separated value) format. Then, we will utilize R to explore the SN data, performing principle component analysis (PCA) to determine which edge properties are most important to defining the edges of a SN, and also association rule learning using the Apriori algorithm to create association rules that can be used to model a similar SN, or to be used to enhance the quality of a dimension reduced SN.
 
+We will use the term **"nodes"** in place of **"vertices"** for the remainder of this report as it is convention when working with OSM and SUMO SN data.
+
+<hr>
+
+## *Part 2 - Exploratory Data Analysis (EDA)*
+
 We have selected a $5000m^2$ SN of Orlando to explore.
 
-## Aknowledgements
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+```
+
+of this data, we have two datasets, **nodes** and **edges**.
+
+```{r}
+nodes.csv <- "https://github.com/QuentinGoss/CAP5771-Final-Project/blob/master/data/node.csv"
+nodes <- read.csv(nodes.csv)
+```
+
+
+<hr>
+
+## *Aknowledgements*
 The street network data is partially derived from OSM data (c) OSM contributors and available at [https://www.openstreetmap.org/](https://www.openstreetmap.org/)
 
-## References
+<hr>
+
+## *References*

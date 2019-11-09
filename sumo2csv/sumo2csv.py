@@ -45,8 +45,8 @@ def main():
                     csv.write(node[attr])
                 except KeyError:
                     pass
-                csv.write('\n')
                 continue
+            csv.write('\n')
             n+=1;purr.update(n,total, msg="Writing node.csv ")
             continue
         pass

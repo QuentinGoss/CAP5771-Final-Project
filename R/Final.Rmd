@@ -11,6 +11,8 @@ output:
 <hr>
 ## *Part 1 - Introduction*
 
+**<u>Research Question</u>:** What do the features of street network nodes and vertices tell us about a street network, which features are dominant, and how can these features be used to make a general classification of a street network?
+
 ***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principle component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**
 
 ***Index Terms*--transportation systems, street networks, association rule learning, principle component analysis**
@@ -31,20 +33,187 @@ We will use the term **"nodes"** in place of **"vertices"** for the remainder of
 
 ## *Part 2 - Exploratory Data Analysis (EDA)*
 
-We have selected a $5000m^2$ SN of Orlando to explore.
+We have selected a $5000m^2$ SN of Orlando to explore. We will perform EDA on the **nodes** first, then on the **edges**.
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dplyr)
+library(cowplot)
 ```
 
-of this data, we have two datasets, **nodes** and **edges**.
+
+
+#### Nodes
 
 ```{r}
-nodes.csv <- "https://github.com/QuentinGoss/CAP5771-Final-Project/blob/master/data/node.csv"
-nodes <- read.csv(nodes.csv)
+node.csv <- "https://raw.githubusercontent.com/QuentinGoss/CAP5771-Final-Project/master/data/node.csv"
+nodes.raw <- read.csv(node.csv)
 ```
 
+The **nodes** are basic. In most cases with SUMO SNs, only four of the fields are utilizied. For brevity those four are as follows:
+
+Feature | Description
+------- | -----------
+id      | Unique Identifier
+x       | x coordinate
+y       | y coordinate
+type    | Rules for resolving same-time arrival conflicts
+
+The **type** options are self exclamatory -- they may be any of the following: priority, traffic_light, right_before_left, unregulated, allway_stop, rail_signal, zipper, traffic_light_right_on_red, and rail_crossing.
+
+```{r}
+paste0('Rows: ',nrow(nodes.raw))
+summary(nodes.raw)
+```
+
+<!-- We will remove the columns that have no data and keep **id**, **x**, **y**, and **type**. -->
+
+<!-- ```{r} -->
+<!-- nodes <- nodes.raw[, c('id','x','y','type')] -->
+<!-- head(nodes) -->
+<!-- ``` -->
+
+<!-- Let's plot the intersections and color them by type. We exclude nodes of **type** *priority* since we anticipate that most of the nodes are going to be *priority*, which is hard to visualize. -->
+
+<!-- ```{r} -->
+<!-- nodes.nopriority <- nodes[ which(nodes$type != 'priority'),] -->
+<!-- ggplot(nodes.nopriority, aes(x=x,y=y,color=type)) + -->
+<!--     geom_point() -->
+<!-- ``` -->
+
+We can't do anthing with the node data related to our research question because:
+1. The node type is not numerical
+2. The node type is the only feature aside from **x**,**y** and **id**, which are not relevant to the research question.
+3. This SN doesn't have any other node features of importance.
+
+Therefore, after EDA of the node data, we reach conclusion 1.
+
+**<u>Conclusion 1</u>:** We may not apply principle component analysis to the node data, nor may we apply association rules learning to the node data because there is only one relavant categorical feature. Therefore, we do not consider node data to be considered in the classfication of the SN.
+
+#### Edges
+
+```{r}
+edge.csv <- "https://raw.githubusercontent.com/QuentinGoss/CAP5771-Final-Project/master/data/edge.csv"
+edges.raw <- read.csv(edge.csv)
+```
+
+The edges of the SN seem to be much more promising to describe the SN than the nodes with 24 features.
+
+Feature | Description
+------- | -----------
+id | Edge ID
+from | Starting node ID.
+to | Ending node ID
+type | Classification of road (i.e Interstates and County Roads)
+numLanes | The amount of lanes.
+speed | Speed limit (meters/second)
+spreadType | Which lane vehicles default to when entering the edge \{"right","center"\}
+width | Road width (meters)
+name | Name of the real-life road that the edge corresponds with. A blank name means offramp or trivial connector road.
+endOffset | The distance the edge if differnt than the (x,y) of **to**.
+sidewalkWidth | Width of the sidewalk
+length | Length of the edge (meters)
+
+The remaining columns are the vehicle types that are allowed to travel on the edge.
+
+<!-- ```{r} -->
+<!-- head(edges.raw) -->
+<!-- ``` -->
+
+Now we take a subset of the data, and clean it up. As stated in the research question, we will be performing Principle Component Analysis (PCA) and Association Rules Learning (ARL), therefore we should select quantitative features for PCA and categorical features for ARL.
+
+***Columns that will be pruned:*** <br>
+**id**, **from**, and **to** consist of features that are unique to this SN and no other. These are defined by OSM, and are unique to itself from the set of every edge in the world. **width**, **endOffset** and **sidewalkWidth** are full of ''. Finally we prune the allowed vehicle type columns **emergency** $\cdots$ **moped** because the values are uniform across the entire dataset.
+
+***Rows that will be pruned:*** <br>
+The 269 rows that have '' as the **name** will be trimmed. This will leave 7074 edges, a significant amount.
+
+***Values that will be modified:***<br>
+`NA` values of **spreadType** will be changed to "right", the default for SUMO edges.
+
+***Note:***
+We have opted to keep the **name** feature, since road names are often commonplace, as is known from the ***Census and You***, a document by the @common-road-names.
+
+<!-- ```{r} -->
+<!-- paste0('rows: ',nrow(edges.raw)) -->
+<!-- summary(edges.raw) -->
+<!-- ``` -->
+
+The code for cleaning the data.
+
+```{r}
+# Trim the decided columns
+edges <- edges.raw[,c('type','numLanes','speed','priority','spreadType','name','length')]
+
+# Trim rows where name = NA
+edges <- edges[which(edges$name != ''),]
+
+# Change spreadType '' to 'right'
+levels(edges$spreadType)[levels(edges$spreadType) == ''] <- 'right'
+
+summary(edges)
+```
+
+The **speed**, **priority**, and **numLanes** features have a significant quality that makes them both categorical and numerical. That is, that all of 7079 samples fit into a small number of buckets.
+
+```{r}
+type.vs.speed <- ggplot(edges, aes(x=speed, y=type)) + geom_point()
+priority.vs.numlanes <- ggplot(edges, aes(x=priority, y=numLanes)) + geom_point()
+plot_grid(type.vs.speed, priority.vs.numlanes, labels= "AUTO")
+```
+
+
+#### *EDA Conclusions*
+
+During EDA we have realized that the node data does not have enough features to perform PCA or ARL to reach a generalization or classification of the SN after the **id**, **x**, **y**, and empty columns are pruned, leaving one feature. 
+
+However, from the 24 features of the raw edge data, we have identified 7079 rows and 7 features. 4/7 of the features; **numLanes**, **speed**, **priority**, and **length** are numeric, thus applicable to perform PCA on. 6/7 of the features; **type**, **spreadType**, **name**, **speed**, **numLanes**, and **priority** are categorical, thus applicable to perform ARL on.
+
+Even without the node data, the edge data satisfies the PCA and ARL applicability conditions of the research question, therefore we may proceed to the methodology portion.
+
+<hr>
+
+## *Part 3 - Methods*
+
+#### *Principle Component Analysis*
+
+```{r message=FALSE, warning=FALSE}
+library(caret)
+library(ggfortify)
+```
+
+
+```{r}
+edges.numeric <- edges[,c('numLanes','speed','priority','length')] 
+pca.edges <- prcomp(edges.numeric, scale = TRUE)
+summary(pca.edges)
+```
+
+```{r}
+autoplot(pca.edges, loadings.colour = 'blue', loadings = TRUE, loadings.label = TRUE, loadings.label.size = 5)
+```
+
+```{r message=FALSE}
+edges.numeric.std <- edges.numeric %>% 
+    preProcess(method = c('center', 'scale')) %>% 
+    predict(edges.numeric)
+autoplot(cor(edges.numeric.std)) +
+    labs(x = '', y = '', title = 'Correlation Plot')
+```
+
+
+#### *Association Rules Learning*
+
+```{r}
+edges.categorical <- edges[,c('type','spreadType','name','speed','numLanes','priority')]
+```
+
+
+<hr>
+
+## *Part 4 - Conclusions.*
+
+**<u>Conclusion 1</u>:** We may not apply principle component analysis to the node data, nor may we apply association rules learning to the node data because there is only one relavant categorical feature. Therefore, we do not consider node data to be considered in the classfication of the SN.
 
 <hr>
 

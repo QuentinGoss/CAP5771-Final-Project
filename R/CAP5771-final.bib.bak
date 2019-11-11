@@ -1,4 +1,3 @@
-% Encoding: UTF-8
 @misc{PCBOCC2016,
 	title={FY 2016-2020 5 Year Conosolidated Plan},
 	author={Hall, John E and Lindsey, George and Bell, Melony and Smith, Edwin and Dantzler, R. Todd},
@@ -319,11 +318,3 @@ month={},}
   year={2018},
   publisher={IEEE}
 }
-
-@Article{common-road-names,
-  author = {U.S. Department of Commerce, Bureau of the Census, Geography Division},
-  title  = {Census and You},
-  year   = {1993},
-}
-
-@Comment{jabref-meta: databaseType:bibtex;}

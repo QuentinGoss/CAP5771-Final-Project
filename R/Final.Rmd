@@ -204,8 +204,37 @@ autoplot(cor(edges.numeric.std)) +
 
 #### *Association Rules Learning*
 
+```{r message=FALSE, warning=FALSE}
+library(arules)
+```
+
+To perform Association Rules Learning (ARL), we use the `arules` package. To preprocess the data for ARL, we create a dataframe of the categorical features. Additionally, we coerce the numerical columns **speed**, **numLanes**, and **priority** into `character` type for compatibility with the `arules` implementation.
 ```{r}
 edges.categorical <- edges[,c('type','spreadType','name','speed','numLanes','priority')]
+edges.categorical[, c('speed','numLanes','priority')] <- edges.categorical[, c('speed','numLanes','priority')] %>% sapply(as.character)
+```
+
+```{r warning=FALSE}
+edges.categorical.tr <- as(edges.categorical,"transactions")
+head(edges.categorical)
+```
+
+```{r}
+edges.rules <- edges.categorical.tr %>% 
+    apriori(
+        parameter = list(support = 0.5, confidence = 0.5, minlen = 5)
+    )
+```
+
+<!-- ```{r} -->
+<!-- rules.df <- edges.rules %>%  -->
+<!--     as('data.frame') -->
+<!-- ``` -->
+
+```{r}
+edges.rules %>% 
+    sort(., by = "lift") %>% 
+    inspect()
 ```
 
 

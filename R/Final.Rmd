@@ -11,6 +11,8 @@ output:
 <hr>
 ## *Part 1 - Introduction*
 
+The last version of this project may be found at the Github repository at [https://github.com/QuentinGoss/CAP5771-Final-Project](https://github.com/QuentinGoss/CAP5771-Final-Project).
+
 **<u>Research Question</u>:** What do the features of street network edges and vertices tell us about a street network, which features are dominant, and how can these features be used to make a general classification of a street network?
 
 ***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principal component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**

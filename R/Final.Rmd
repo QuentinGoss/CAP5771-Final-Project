@@ -11,11 +11,11 @@ output:
 <hr>
 ## *Part 1 - Introduction*
 
-**<u>Research Question</u>:** What do the features of street network nodes and vertices tell us about a street network, which features are dominant, and how can these features be used to make a general classification of a street network?
+**<u>Research Question</u>:** What do the features of street network edges and vertices tell us about a street network, which features are dominant, and how can these features be used to make a general classification of a street network?
 
-***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principle component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**
+***Abstract*--One of the many steps in modeling transportation systems, is understanding the street network and the characteristics of the roads and intersections thereof. In this paper, we utilize R to perform principal component analysis and association rule learning to explore and classify the characteristics of a street network spatially.**
 
-***Index Terms*--transportation systems, street networks, association rule learning, principle component analysis**
+***Index Terms*--transportation systems, street networks, association rule learning, principal component analysis**
 
 The transportation system (TS) is a complex arrangement of roads, highways, bridges, intersections, and infrastructure which traditionally provides the means of moving people and cargo from one place in the system to another in the least amount of time. Every TS is unique, and also imperfect since the layout of a TS is gradually implemented over ten or hundreds of years. During the expansion of a TS, it is unreasonable or impossible to predict the perfect expansion layout for the current moment as well for all potential futures. Often times, a government committee creates TS models to plan for TS expansion in the near future such as the 5 Year Consolidated Plan created by the Polk County Board of County Commissioners each year @PCBOCC2016.
 
@@ -25,7 +25,7 @@ Many TS modeling tools utilize SNs and the OSM SNs such as OSMnx for analysis an
 
 We will be using a SN retrieved from OSM, of which the drivable roads are filtered and that is converted into SUMO SN format, which is easier to work with.
 
-Edges may contain data such as speed, type, priority, and name, along with graph information such as the vertex id that it begins and ends at. The nodes (vertices) are simpler, they contain spatial information, and a type, which are tie-breaking rules when two vehicles enter the vertex, which decides a vehicle to move first when they arrive at an intersection at the same time. For our proposed approach, we will first pre-process the SN data using Python to format it into CSV (comma separated value) format. Then, we will utilize R to explore the SN data, performing principle component analysis (PCA) to determine which edge properties are most important to defining the edges of a SN, and also association rule learning using the Apriori algorithm to create association rules that can be used to model a similar SN, or to be used to enhance the quality of a dimension reduced SN.
+Edges may contain data such as speed, type, priority, and name, along with graph information such as the vertex id that it begins and ends at. The nodes (vertices) are simpler, they contain spatial information, and a type, which are tie-breaking rules when two vehicles enter the vertex, which decides a vehicle to move first when they arrive at an intersection at the same time. For our proposed approach, we will first pre-process the SN data using Python to format it into CSV (comma separated value) format. Then, we will utilize R to explore the SN data, performing principal component analysis (PCA) to determine which edge properties are most important to defining the edges of a SN, and also association rule learning using the Apriori algorithm to create association rules that can be used to model a similar SN, or to be used to enhance the quality of a dimension reduced SN.
 
 We will use the term **"nodes"** in place of **"vertices"** for the remainder of this report as it is convention when working with OSM and SUMO SN data.
 
@@ -88,7 +88,7 @@ We can't do anthing with the node data related to our research question because:
 
 Therefore, after EDA of the node data, we reach conclusion 1.
 
-**<u>Conclusion 1</u>:** We may not apply principle component analysis to the node data, nor may we apply association rules learning to the node data because there is only one relavant categorical feature. Therefore, we do not consider node data to be considered in the classfication of the SN.
+**<u>Conclusion 1</u>:** We may not apply principal component analysis to the node data, nor may we apply association rules learning to the node data because there is only one relavant categorical feature. Therefore, we do not consider node data to be considered in the classification of the SN.
 
 #### Edges
 
@@ -120,7 +120,7 @@ The remaining columns are the vehicle types that are allowed to travel on the ed
 <!-- head(edges.raw) -->
 <!-- ``` -->
 
-Now we take a subset of the data, and clean it up. As stated in the research question, we will be performing Principle Component Analysis (PCA) and Association Rules Learning (ARL), therefore we should select quantitative features for PCA and categorical features for ARL.
+Now we take a subset of the data, and clean it up. As stated in the research question, we will be performing principal Component Analysis (PCA) and Association Rules Learning (ARL), therefore we should select quantitative features for PCA and categorical features for ARL.
 
 ***Columns that will be pruned:*** <br>
 **id**, **from**, and **to** consist of features that are unique to this SN and no other. These are defined by OSM, and are unique to itself from the set of every edge in the world. **width**, **endOffset** and **sidewalkWidth** are full of ''. Finally we prune the allowed vehicle type columns **emergency** $\cdots$ **moped** because the values are uniform across the entire dataset.
@@ -175,13 +175,16 @@ Even without the node data, the edge data satisfies the PCA and ARL applicabilit
 
 ## *Part 3 - Methods*
 
-#### *Principle Component Analysis*
+#### *Principal Component Analysis*
+
+While PCA is available in base R, we will use the `caret` and `ggfortify` packages for visualization.
 
 ```{r message=FALSE, warning=FALSE}
 library(caret)
 library(ggfortify)
 ```
 
+During EDA, we identified 4 of the 7 features to be applicable for PCA. These features are **numLanes**, **speed**, **priority**, and **length**, which we create `edges.numeric`, as a subset of `edges`. When we perform PCA, we will *standardize* the data beforehand. The result of PCA are four principal components (PCs). The first three components cover 0.9631 of the cumulative proportion. This is a small reduction in dimension, and it lets us know that $\frac{1}{4}$ of the features must not have a large contribution.
 
 ```{r}
 edges.numeric <- edges[,c('numLanes','speed','priority','length')] 
@@ -189,9 +192,13 @@ pca.edges <- prcomp(edges.numeric, scale = TRUE)
 summary(pca.edges)
 ```
 
+Further inspection into the PCA results presented via biplot. Notably, we see that **speed**, **priority** and **numLanes** are moderately to highly correlated.
+
 ```{r}
 autoplot(pca.edges, loadings.colour = 'blue', loadings = TRUE, loadings.label = TRUE, loadings.label.size = 5)
 ```
+
+Notably, when we view the correlation plot of the features, WE find that **priorty** and **numLanes** are strongly correlated, and that **priority** and **speed** are moderately correlated. **Length** has very little, if any correlation to the other features.
 
 ```{r message=FALSE}
 edges.numeric.std <- edges.numeric %>% 
@@ -200,6 +207,15 @@ edges.numeric.std <- edges.numeric %>%
 autoplot(cor(edges.numeric.std)) +
     labs(x = '', y = '', title = 'Correlation Plot')
 ```
+
+##### *PCA Conclusion*
+Through PCA, we conclude that **speed**, **numLanes**, and **priority** are the optimal numerical features to classify a SUMO edge. This conclusion is supported by three observations:
+
+1. The first three PCs have a cumulative proportion of 0.9631.
+2. The biplot shows possible moderate/strong correlation of **speed**, **numLanes**, and **priority**.
+3. The correlation plot clarifies the latter showing a strong correlation between **priority** and **numlanes**, and a moderate correlation between **priority** and **speed**.
+
+**<u>Conclusion 2</u>:** The dominant numerical features of an edge are **numLanes**, **priority**, and **speed**.
 
 
 #### *Association Rules Learning*
@@ -214,15 +230,18 @@ edges.categorical <- edges[,c('type','spreadType','name','speed','numLanes','pri
 edges.categorical[, c('speed','numLanes','priority')] <- edges.categorical[, c('speed','numLanes','priority')] %>% sapply(as.character)
 ```
 
+The data is coerced into `transactions` type.
+
 ```{r warning=FALSE}
 edges.categorical.tr <- as(edges.categorical,"transactions")
-head(edges.categorical)
 ```
+
+Now we must make the hard decision of the values of `confidence`, `support`, and `minlen`. We would like to consider each of the features, therefore we choose a `minlen=5`. Through some trial and error of various `support` and `confidence` values, we find that `support=0.1` and `confidence=0.5` produces a small amount of results with high **lift** and high **count**.
 
 ```{r}
 edges.rules <- edges.categorical.tr %>% 
     apriori(
-        parameter = list(support = 0.5, confidence = 0.5, minlen = 5)
+        parameter = list(support = 0.1, confidence = 0.5, minlen = 5)
     )
 ```
 
@@ -231,18 +250,39 @@ edges.rules <- edges.categorical.tr %>%
 <!--     as('data.frame') -->
 <!-- ``` -->
 
+The rules produced are few enough in number that we can simply examine all 10 results. From this, we can tell that this SN is prodominately made up of *tertiary* and *residential* highways, with speeds of ~30mph and ~50mph respectively after converting from $m/s$ to $mph$, made up of 1-lane roads (per side of the road) and also a **priority** which is highly correlated with **speed** as we determined during PCA. 
+
+```{r}
+ms2mph <- function(x) {return(x*2.23694)}
+paste0('Highway.Tertiary ',ms2mph(22.22), ' mph   Highway.Residential ', ms2mph(13.89),' mph')
+```
+
+
 ```{r}
 edges.rules %>% 
     sort(., by = "lift") %>% 
     inspect()
 ```
 
+###### *ARL Conclusion*
+
+Through ARL, we categorize the features of the edges in a SN into two edge types, a *tertiary* highway, and a *residential* highway. Additionally, ARL reinforces the hypothesis that SUMO SN edges fit into the a discrete amount of buckets, therefore, it is possible to generate a summary of a SN through edge feature analysis.
+
+**<u>Conclusion 3</u>:** The features **type**, **spreadType**, **speed**, **numLanes**, and **priority** may be used to create association rules through Apriori, with support = 0.1, confidence = 0.5, and minLen = 5 to produce a small number of rules that forms a general classification of the street network.
 
 <hr>
 
 ## *Part 4 - Conclusions.*
 
-**<u>Conclusion 1</u>:** We may not apply principle component analysis to the node data, nor may we apply association rules learning to the node data because there is only one relavant categorical feature. Therefore, we do not consider node data to be considered in the classfication of the SN.
+During the exploration of the SN data, we reach the following three conclusions in regaurds to our research question:
+
+**<u>Conclusion 1</u>:** We may not apply principal component analysis to the node data, nor may we apply association rules learning to the node data because there is only one relavant categorical feature. Therefore, we do not consider node data to be considered in the classfication of the SN.
+
+**<u>Conclusion 2</u>:** The dominant numerical features of an edge are **numLanes**, **priority**, and **speed**.
+
+**<u>Conclusion 3</u>:** The features **type**, **spreadType**, **speed**, **numLanes**, and **priority** may be used to create association rules through Apriori, with support = 0.1, confidence = 0.5, and minLen = 5 to produce a small number of rules that forms a general classification of the street network.
+
+For future work, we will explore a variety of SNs, that conisist of multiple types of locations such as rural, small town, downtown (like the SN in this paper), suburb, and manufacturing/warehousing. We also suspect that the nature of *highway.residential* edge segments being shorter and thus appearing more frequently than the other **type**s may cause an innacurate skew in classication towards *highway.residential*, thus we will create a technique to reduce this unattural skew.
 
 <hr>
 
